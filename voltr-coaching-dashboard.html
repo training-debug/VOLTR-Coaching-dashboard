@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>VOLTR Coaching</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  background: #fff; color: #111; line-height: 1.5; padding: 16px;
+  max-width: 1100px; margin: 0 auto; font-size: 13px;
+  -webkit-text-size-adjust: 100%;
+}
+h1 { font-size: 20px; font-weight: 500; letter-spacing: -0.3px; }
+h3 { font-size: 13px; font-weight: 500; margin-bottom: 8px; color: #333; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+.header-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+button {
+  font-family: 'Outfit', inherit; font-size: 12px; cursor: pointer;
+  border: 1px solid #ddd; background: #fff; color: #333;
+  padding: 8px 14px; border-radius: 6px; transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+button:hover { background: #f0f0f0; }
+button.primary { background: #111; color: #fff; border-color: #111; }
+button.primary:hover { background: #333; }
+button.danger { color: #E24B4A; border-color: #E24B4A; font-size: 11px; padding: 3px 7px; }
+button.danger:hover { background: #fef2f2; }
+button.xbtn { padding: 1px 5px; font-size: 10px; line-height: 1.2; color: #999; border-color: #ddd; background: none; }
+button.xbtn:hover { color: #E24B4A; border-color: #E24B4A; }
+
+.tabs { display: flex; gap: 3px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab {
+  padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 400;
+  border: 1px solid #e0e0e0; background: #fff; color: #666; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.tab:hover { background: #f5f5f5; }
+.tab.active { background: #111; color: #fff; border-color: #111; }
+.status-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+.dot-green { background: #1D9E75; }
+.dot-gray { background: #aaa; }
+
+.cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.card { background: #f7f7f7; border-radius: 8px; padding: 12px; }
+.card-label { font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; font-weight: 300; }
+.card-value { font-size: 20px; font-weight: 500; }
+.card-sub { font-size: 11px; color: #888; }
+
+.time-range { display: flex; gap: 4px; margin-bottom: 14px; }
+.time-range button { font-size: 11px; padding: 4px 10px; }
+.time-range button.active { background: #111; color: #fff; border-color: #111; }
+
+.chart-container { height: 250px; margin-bottom: 18px; position: relative; }
+.chart-container canvas { width: 100% !important; height: 100% !important; }
+
+.table-wrap { max-height: 300px; overflow-y: auto; border: 1px solid #e8e8e8; border-radius: 8px; margin-bottom: 18px; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+thead { position: sticky; top: 0; z-index: 1; }
+th { background: #f7f7f7; font-weight: 600; text-align: left; padding: 7px 8px; border-bottom: 1px solid #e0e0e0; white-space: nowrap; font-size: 11px; }
+td { padding: 6px 8px; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+tr:hover td { background: #fafafa; }
+.clickable { cursor: pointer; }
+.inactive-row td { background: #fff5f5; }
+.inactive-row:hover td { background: #fff0f0; }
+.trend-down { color: #1D9E75; }
+.trend-up { color: #E24B4A; }
+
+.form-section { background: #f7f7f7; border-radius: 8px; padding: 14px; margin-bottom: 18px; }
+.form-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: flex-end; }
+.form-group { display: flex; flex-direction: column; gap: 2px; }
+.form-group label { font-size: 10px; color: #666; font-weight: 500; }
+.form-group input, .form-group select {
+  font-family: 'Outfit', inherit; font-size: 14px; padding: 8px 10px;
+  border: 1px solid #ddd; border-radius: 6px; background: #fff;
+  min-height: 38px;
+}
+.form-group input:focus, .form-group select:focus { outline: none; border-color: #111; }
+.w100 { width: 100px; }
+.w120 { width: 120px; }
+.w150 { width: 150px; }
+.w80 { width: 80px; }
+
+.section { margin-bottom: 22px; }
+.hidden-input { display: none; }
+
+@media (max-width: 600px) {
+  body { padding: 10px; font-size: 14px; }
+  h1 { font-size: 18px; }
+  .header { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .header-actions { width: 100%; }
+  .header-actions button { flex: 1; padding: 10px 8px; }
+  .tabs { gap: 4px; padding-bottom: 4px; }
+  .tab { padding: 10px 12px; font-size: 13px; }
+  .cards { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .card { padding: 10px; }
+  .card-value { font-size: 18px; }
+  .time-range { flex-wrap: wrap; }
+  .time-range button { flex: 1; padding: 10px 8px; font-size: 12px; min-width: 70px; }
+  .chart-container { height: 200px; }
+  .table-wrap { max-height: 250px; font-size: 12px; }
+  th, td { padding: 8px 6px; font-size: 12px; }
+  .form-section { padding: 12px; }
+  .form-row { flex-direction: column; gap: 10px; }
+  .form-group { width: 100%; }
+  .form-group input, .form-group select { width: 100%; font-size: 16px; padding: 10px; min-height: 44px; }
+  .w80, .w100, .w120, .w150 { width: 100%; }
+  button.primary { width: 100%; padding: 12px; font-size: 14px; margin-top: 4px; }
+  .form-group label { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>VOLTR<span style="font-weight:200;color:#888;margin-left:6px">coaching</span></h1>
+  <div class="header-actions">
+    <button onclick="exportData()">Export JSON</button>
+    <button onclick="document.getElementById('importFile').click()">Import JSON</button>
+    <input type="file" id="importFile" class="hidden-input" accept=".json" onchange="importData(event)">
+    <button class="danger" onclick="resetData()">Reset</button>
+  </div>
+</div>
+<div class="tabs" id="tabBar"></div>
+<div id="content"></div>
+
+<script>
+const LS_KEY = 'voltr_coaching_data';
+const TODAY = new Date().toISOString().slice(0, 10);
+
+const BASELINE = {
+"Jörg Rabl":{status:"Aktiv",isRunner:false,daily:[{d:"2025-07-27",w:91.85},{d:"2026-03-12",w:87.6,cal:2000,steps:0},{d:"2026-03-13",w:87.85,cal:2200,steps:0},{d:"2026-03-31",w:87.6},{d:"2026-04-06",w:87.1,cal:2000,steps:0},{d:"2026-04-07",w:87.6,cal:2400,steps:0},{d:"2026-04-08",w:88.5,cal:2800,steps:0},{d:"2026-04-09",w:87.1,cal:2100,steps:0},{d:"2026-04-10",w:88.45,cal:2300,steps:0},{d:"2026-04-11",w:87.65,cal:2148,steps:0},{d:"2026-04-12",w:87.85,cal:2500,steps:0},{d:"2026-04-18",w:88.25,cal:2200,steps:0},{d:"2026-04-24",w:87.6,cal:2200,steps:10000}]},
+"Aymeric Echterhoff":{status:"Aktiv",isRunner:false,daily:[{d:"2025-05-15",w:129.7},{d:"2025-05-23",w:131.2},{d:"2025-05-25",w:133},{d:"2025-05-26",w:132},{d:"2025-06-02",w:131},{d:"2025-06-09",w:132},{d:"2025-06-30",w:130},{d:"2025-07-06",w:130.6},{d:"2025-07-13",w:132},{d:"2025-07-16",w:131.7},{d:"2025-07-19",w:130.6},{d:"2025-07-27",w:130.8},{d:"2025-08-25",w:128.6},{d:"2025-08-31",w:128.6},{d:"2025-09-08",w:129},{d:"2025-09-15",w:129},{d:"2025-09-16",w:128.9},{d:"2025-09-22",w:128.4},{d:"2025-09-29",w:128.1},{d:"2025-10-13",w:126},{d:"2025-10-17",w:124.4},{d:"2025-10-20",w:126.8},{d:"2025-10-27",w:124.5},{d:"2025-11-10",w:126},{d:"2025-12-22",w:127}]},
+"Antonia Pott":{status:"Aktiv",isRunner:false,daily:[{d:"2025-03-09",w:62.8},{d:"2025-03-16",w:62.1},{d:"2025-03-23",w:62.2},{d:"2025-03-30",w:62.5},{d:"2025-04-06",w:62.5},{d:"2025-04-20",w:60.8},{d:"2025-04-27",w:61.2},{d:"2025-05-04",w:61.7},{d:"2025-05-10",w:60.7},{d:"2025-05-17",w:60.9},{d:"2025-05-25",w:61.1},{d:"2025-06-14",w:61.3},{d:"2025-06-22",w:61.1},{d:"2025-08-02",w:62.8},{d:"2025-08-16",w:62.6},{d:"2025-08-23",w:62.2},{d:"2025-08-30",w:62.8},{d:"2025-09-14",w:62.3},{d:"2025-09-28",w:62.8},{d:"2025-10-05",w:63},{d:"2025-10-12",w:62.7},{d:"2025-10-19",w:63.2},{d:"2025-10-25",w:62.9},{d:"2025-11-02",w:64.3},{d:"2025-11-09",w:63.2},{d:"2025-11-16",w:63.2},{d:"2025-11-23",w:62.8},{d:"2025-11-30",w:63.6},{d:"2025-12-07",w:63.4},{d:"2025-12-14",w:63.6},{d:"2025-12-21",w:64},{d:"2025-12-28",w:64.5},{d:"2026-01-04",w:63.7},{d:"2026-01-10",w:63.6},{d:"2026-01-18",w:63.5},{d:"2026-01-25",w:63.2},{d:"2026-02-01",w:63},{d:"2026-02-08",w:64.8},{d:"2026-02-22",w:64.5},{d:"2026-03-08",w:63},{d:"2026-03-12",w:64.3,steps:7200},{d:"2026-03-13",w:65,cal:1600,steps:9900},{d:"2026-03-24",w:65},{d:"2026-03-31",w:65},{d:"2026-04-07",w:64.6},{d:"2026-04-14",w:65},{d:"2026-05-03",w:65}]},
+"Anton Wohlgemuth":{status:"Aktiv",isRunner:false,daily:[{d:"2025-05-20",w:73.2},{d:"2025-05-26",w:73.8},{d:"2025-06-09",w:74.6},{d:"2025-08-24",w:77.5},{d:"2025-09-15",w:77.8},{d:"2025-09-22",w:77.8},{d:"2025-10-12",w:77.2},{d:"2025-10-26",w:77.8},{d:"2025-11-02",w:75.4},{d:"2025-11-10",w:77.1},{d:"2025-11-29",w:76.8},{d:"2025-12-10",w:76.4},{d:"2025-12-14",w:76.4},{d:"2025-12-21",w:75.7},{d:"2026-01-07",w:74.8},{d:"2026-01-19",w:74.6},{d:"2026-01-26",w:74},{d:"2026-02-02",w:73.1},{d:"2026-02-08",w:72.8},{d:"2026-02-16",w:71.9},{d:"2026-02-23",w:72.1},{d:"2026-03-01",w:71.3},{d:"2026-03-10",w:72.2},{d:"2026-03-23",w:70.7},{d:"2026-03-30",w:71.2},{d:"2026-04-14",w:71},{d:"2026-04-27",w:70.2},{d:"2026-05-04",w:71.2}]},
+"Thomas Moser":{status:"Aktiv",isRunner:false,daily:[{d:"2025-04-21",w:71.2},{d:"2025-04-28",w:73.6},{d:"2025-05-05",w:74},{d:"2025-05-11",w:74.2},{d:"2025-05-19",w:74},{d:"2025-05-26",w:74.3},{d:"2025-06-09",w:75},{d:"2025-06-16",w:75.5},{d:"2025-06-23",w:75},{d:"2025-06-30",w:75},{d:"2025-07-14",w:74.8},{d:"2025-07-28",w:76.9},{d:"2025-08-06",w:77},{d:"2025-12-29",w:80.4},{d:"2026-01-05",w:81.1},{d:"2026-03-09",w:80},{d:"2026-05-04",w:80.9,steps:13505}]},
+"Thomas Kellermann":{status:"Pausiert",isRunner:false,daily:[{d:"2026-04-20",w:101.2,steps:15000}]},
+"Terez Orosz":{status:"Aktiv",isRunner:false,daily:[{d:"2026-04-11",w:73.7,cal:1800,steps:3000},{d:"2026-04-12",w:73.3},{d:"2026-04-18",w:72.8},{d:"2026-04-19",w:72.2},{d:"2026-04-20",w:71.7},{d:"2026-04-21",w:71.8},{d:"2026-04-22",w:71.3},{d:"2026-04-23",w:71},{d:"2026-04-24",w:71.3},{d:"2026-04-25",w:71.6},{d:"2026-04-26",w:71.2},{d:"2026-04-27",w:71.6},{d:"2026-04-28",w:72.1},{d:"2026-04-29",w:71.3},{d:"2026-04-30",w:71.2},{d:"2026-05-01",w:71.5},{d:"2026-05-02",w:72},{d:"2026-05-03",w:71.3},{d:"2026-05-04",w:71.3},{d:"2026-05-05",w:71.6},{d:"2026-05-08",w:71.8},{d:"2026-05-09",w:71},{d:"2026-05-10",w:70.2},{d:"2026-05-11",w:70.1},{d:"2026-05-12",w:70.3}]},
+"Anel Sejdic":{status:"Aktiv",isRunner:false,daily:[{d:"2026-04-05",w:78,cal:2121,steps:12213},{d:"2026-04-06",w:77.1,cal:2220,steps:10771},{d:"2026-04-07",w:77,cal:1990,steps:10102},{d:"2026-04-08",w:76.9,cal:2541,steps:10100},{d:"2026-04-09",cal:3218,steps:39215},{d:"2026-04-10",w:77,cal:2401,steps:10244},{d:"2026-04-11",w:77,cal:2527,steps:15390},{d:"2026-04-12",w:77.1,cal:2221,steps:9095},{d:"2026-04-14",w:77},{d:"2026-04-17",cal:2520,steps:15347},{d:"2026-04-18",w:77.6,cal:2338,steps:10599},{d:"2026-04-19",w:77.2,cal:1888,steps:5000},{d:"2026-04-20",w:77.1,cal:2266,steps:11847},{d:"2026-04-21",w:77.2,cal:2234,steps:10000},{d:"2026-04-22",w:76.5,cal:2228,steps:13117},{d:"2026-04-23",w:76.5,cal:2327,steps:11687},{d:"2026-04-24",w:76.6,cal:1854,steps:7449},{d:"2026-04-25",w:76.9,cal:2660,steps:16333},{d:"2026-04-26",w:76.7,cal:2666,steps:10070},{d:"2026-04-27",w:76.8,cal:1942,steps:10134},{d:"2026-04-28",w:77,cal:2128,steps:8298},{d:"2026-04-29",w:77.2,cal:2414,steps:15266},{d:"2026-04-30",w:77,cal:2700,steps:17465},{d:"2026-05-01",w:76.3,cal:2820,steps:19538},{d:"2026-05-02",w:76.7,cal:2271,steps:12257},{d:"2026-05-04",w:76.8,cal:2066,steps:10827},{d:"2026-05-05",w:76.6,cal:2017,steps:20331},{d:"2026-05-06",w:77.4,cal:2010,steps:11383},{d:"2026-05-07",w:76.3,cal:2113,steps:9500},{d:"2026-05-08",w:76.5,cal:1876,steps:3000},{d:"2026-05-09",w:76.8,cal:1904,steps:16659},{d:"2026-05-10",w:75.8,cal:2046,steps:13036},{d:"2026-05-11",w:76.3,cal:2073,steps:10089}]},
+"Lukas Wasslu":{status:"Pausiert",isRunner:false,daily:[{d:"2025-04-19",w:105.5},{d:"2025-04-21",w:104.9},{d:"2025-04-23",w:104.2},{d:"2025-04-28",w:105.25},{d:"2025-05-05",w:105.7},{d:"2025-05-16",w:105.15},{d:"2025-05-19",w:105.6},{d:"2025-05-26",w:105.55},{d:"2025-06-02",w:106.4},{d:"2025-06-04",w:107.45},{d:"2025-06-05",w:106.5},{d:"2025-06-07",w:104.85},{d:"2025-06-08",w:104.85},{d:"2025-06-09",w:105.75},{d:"2025-06-16",w:106},{d:"2025-06-21",w:104.9},{d:"2025-06-23",w:105},{d:"2025-07-20",w:103.7},{d:"2025-08-03",w:103.45},{d:"2025-08-17",w:102.15},{d:"2025-08-25",w:101.7},{d:"2025-09-01",w:101.7},{d:"2025-09-08",w:101.35},{d:"2025-09-15",w:103.1},{d:"2025-09-29",w:103.1},{d:"2025-10-13",w:102.7},{d:"2025-11-03",w:104},{d:"2025-12-01",w:104.5},{d:"2025-12-08",w:104.65},{d:"2025-12-15",w:103.9},{d:"2026-01-12",w:104.25},{d:"2026-01-19",w:105.5},{d:"2026-02-09",w:104.35},{d:"2026-02-16",w:103.8},{d:"2026-02-23",w:102.2},{d:"2026-03-02",w:104.3},{d:"2026-03-09",w:103.8},{d:"2026-03-16",w:103.2}]},
+"Sascha Doubek":{status:"Aktiv",isRunner:true,daily:[{d:"2026-04-27",w:85.7}],weekly_km:[{d:"2025-12-01",km:12,runs:2},{d:"2025-12-08",km:25.1,runs:2},{d:"2025-12-15",km:22,runs:3},{d:"2025-12-22",km:23.1,runs:2},{d:"2025-12-29",km:36.9,runs:3},{d:"2026-01-05",km:28.1,runs:4},{d:"2026-01-12",km:12,runs:1},{d:"2026-01-19",km:24,runs:2},{d:"2026-01-26",km:34.6,runs:4},{d:"2026-02-09",km:16,runs:2},{d:"2026-03-16",km:21.3,runs:1},{d:"2026-03-23",km:30.9,runs:5},{d:"2026-03-30",km:34.4,runs:3},{d:"2026-04-06",km:38,runs:4},{d:"2026-04-13",km:33.7,runs:4},{d:"2026-04-19",km:21.1,runs:1},{d:"2026-04-20",km:28,runs:2},{d:"2026-04-27",km:12,runs:1},{d:"2026-05-04",km:27,runs:1}],sessions:[{d:"2026-04-02",type:"Intervall",dist:13.5,note:"5×2000m @04:20"},{d:"2026-04-04",type:"Tempo",dist:10.8,note:"2×4km @04:35"},{d:"2026-04-06",type:"Long Run",dist:15,note:"10K@05:30 5K@04:40"},{d:"2026-04-08",type:"Tempo",dist:14,note:"3×4km @04:20"},{d:"2026-04-10",type:"Easy Run",dist:8,note:"8K @06:00"},{d:"2026-04-11",type:"Intervall",dist:8,note:"5×1000m Last Dance"},{d:"2026-04-12",type:"Running",dist:15,note:"Letzter Long vor HM"},{d:"2026-04-14",type:"Easy Run",dist:6,note:"4×30s schneller"},{d:"2026-04-16",type:"Easy Run",dist:7,note:"3-5K @Race Pace"},{d:"2026-04-17",type:"Running",dist:12},{d:"2026-04-18",type:"Shakeout",dist:3,note:"3K locker + Steigerungen"},{d:"2026-04-19",type:"WETTKAMPF",dist:21.1,note:"Vienna City HM"},{d:"2026-04-26",type:"Running",dist:16},{d:"2026-04-28",type:"Tempo",dist:12,note:"Tempodauerlauf"},{d:"2026-05-10",type:"WETTKAMPF",dist:27,note:"Wings for Life Run"}],races:[{d:"2026-04-19",name:"Vienna City HM",dist:"21.1km"},{d:"2026-05-10",name:"Wings for Life Run",dist:"27.0km"}]},
+"Stefan Lobitzer":{status:"Aktiv",isRunner:true,daily:[{d:"2025-01-06",w:90.2},{d:"2025-01-13",w:89.9},{d:"2025-01-20",w:90.1},{d:"2025-01-27",w:90.2},{d:"2025-02-03",w:92},{d:"2025-02-10",w:93},{d:"2025-02-17",w:93},{d:"2025-02-24",w:93},{d:"2025-03-03",w:92},{d:"2025-03-10",w:91.4},{d:"2025-03-18",w:89.8},{d:"2025-03-24",w:89},{d:"2025-03-31",w:89.4},{d:"2025-04-07",w:88.4},{d:"2025-04-14",w:89.9},{d:"2025-04-28",w:88.2},{d:"2025-05-05",w:87.4},{d:"2025-05-12",w:86.1},{d:"2025-05-19",w:86},{d:"2025-05-26",w:85.9},{d:"2025-06-02",w:85.3},{d:"2025-06-09",w:86.4},{d:"2025-06-23",w:87.4},{d:"2025-06-30",w:87},{d:"2025-07-07",w:86.4},{d:"2025-07-13",w:86.4},{d:"2025-08-04",w:86.5},{d:"2025-08-11",w:85.8},{d:"2025-08-18",w:85},{d:"2025-09-15",w:85},{d:"2025-09-22",w:85},{d:"2025-09-29",w:88},{d:"2025-10-06",w:85.8},{d:"2025-10-13",w:86},{d:"2025-10-20",w:85.5},{d:"2025-10-27",w:86},{d:"2025-11-03",w:86},{d:"2025-11-10",w:86.4},{d:"2026-01-05",w:85.9},{d:"2026-01-12",w:85},{d:"2026-01-19",w:85.7},{d:"2026-01-26",w:85},{d:"2026-02-09",w:86},{d:"2026-02-16",w:84.6},{d:"2026-02-23",w:84.1},{d:"2026-03-02",w:83.7},{d:"2026-03-09",w:83.3}],weekly_km:[{d:"2026-03-02",km:22.2,runs:2},{d:"2026-03-09",km:22.2,runs:3},{d:"2026-03-16",km:33,runs:3},{d:"2026-03-23",km:42,runs:4},{d:"2026-03-30",km:39,runs:4},{d:"2026-04-06",km:36.9,runs:3},{d:"2026-04-13",km:33,runs:3},{d:"2026-04-20",km:46,runs:4},{d:"2026-04-27",km:65.3,runs:4}],sessions:[{d:"2026-03-03",type:"Easy Run",dist:10.2,note:"60 Min @06:00"},{d:"2026-03-08",type:"Running",dist:12},{d:"2026-03-10",type:"Easy Run",dist:10.2},{d:"2026-03-14",type:"Easy Run 12K",note:"12K @06:00"},{d:"2026-03-15",type:"Running",dist:12},{d:"2026-03-16",type:"Easy Run 8km",dist:8},{d:"2026-03-18",type:"Easy Run 10km",dist:10,note:"10K @Easy"},{d:"2026-03-20",type:"15K Long Run",dist:15,note:"15K @05:50"},{d:"2026-03-24",type:"Easy Run 8km",dist:8.01,note:"8K @06:00"},{d:"2026-03-26",type:"12K @ Progressiv",note:"2K@06:00 bis 2K@04:45"},{d:"2026-03-27",type:"Running",dist:12},{d:"2026-03-29",type:"Long Run 25K",dist:20,note:"10K@06:00+10-15K@05:20+20K@06:00+Bergauf"},{d:"2026-03-29",type:"Running",dist:2.01,note:"Cooldown"},{d:"2026-03-30",type:"Quality 14K",note:"14K@05:50, 10-14K 3x5Min Bergauf"},{d:"2026-03-31",type:"Easy Run 8km",dist:17,note:"8K @06:00"},{d:"2026-04-02",type:"Quality 10K",dist:10,note:"@05:50, Ab km6 3x5Min Bergab"},{d:"2026-04-04",type:"Trail Run 18K",dist:18,note:"Last Long Run. ~200HM"},{d:"2026-04-05",type:"Trail Running",dist:12},{d:"2026-04-07",type:"Easy Run 5km",note:"5K@05:50+Steigerungen"},{d:"2026-04-08",type:"Easy Run 4km",note:"4K @Easy"},{d:"2026-04-09",type:"Wörtersee Trail",dist:62.9,note:"WETTKAMPF! Ultra Trail"},{d:"2026-04-09",type:"Ultra Running",dist:6.8,note:"Post-Race"},{d:"2026-04-09",type:"Running",dist:6.7,note:"Split"},{d:"2026-04-09",type:"Running",dist:6.7,note:"Split"},{d:"2026-04-09",type:"Running",dist:6.71,note:"Split"},{d:"2026-04-14",type:"Easy Run 8km",dist:8},{d:"2026-04-16",type:"Easy Run 10km",dist:10},{d:"2026-04-18",type:"15K Long Run",dist:15,note:"15K @05:50"},{d:"2026-04-20",type:"17K Long Run",note:"15K@05:30"},{d:"2026-04-21",type:"10km",dist:15,note:"10K @05:50"},{d:"2026-04-23",type:"15K Long Run",note:"15K @05:50"},{d:"2026-04-25",type:"Trail Run 2:30",dist:21,note:"~500HM Trail"},{d:"2026-04-26",type:"Easy Run 10km Recovery",dist:10,note:"10K @Easy"},{d:"2026-04-28",type:"Stair Climbing",note:"~200HM"},{d:"2026-04-29",type:"Easy Run 5km",note:"5K@05:50+Steigerungen"},{d:"2026-05-05",type:"Easy Run 5km",note:"5K@05:50"},{d:"2026-05-08",type:"Easy Run 4km",dist:2.41,note:"4K @Easy"},{d:"2026-05-09",type:"Ultra Running",dist:62.9,note:"Wörtersee Trail"}],races:[{d:"2026-04-09",name:"Wörtersee Trail",dist:"62.9km",time:"8:08:42",note:"Ultra Trail! CTL 179 am Raceday. Massive Leistung."}]}
+};
+
+let data = {};
+let currentTab = '__overview__';
+let currentRange = 'all';
+let chartInstances = [];
+
+function loadData() {
+  const raw = localStorage.getItem(LS_KEY);
+  if (raw) { try { data = JSON.parse(raw); return; } catch(e) {} }
+  data = JSON.parse(JSON.stringify(BASELINE));
+  saveData();
+}
+
+function saveData() { localStorage.setItem(LS_KEY, JSON.stringify(data)); }
+
+function sortByD(arr) { arr.sort((a, b) => a.d.localeCompare(b.d)); }
+
+function destroyCharts() {
+  chartInstances.forEach(c => { try { c.destroy(); } catch(e){} });
+  chartInstances = [];
+}
+
+function daysBetween(a, b) { return Math.floor((new Date(b) - new Date(a)) / 86400000); }
+
+function cutoffDate(range) {
+  const d = new Date(TODAY);
+  if (range === '4w') d.setDate(d.getDate() - 28);
+  else if (range === '3m') d.setMonth(d.getMonth() - 3);
+  else if (range === '1y') d.setFullYear(d.getFullYear() - 1);
+  else return null;
+  return d.toISOString().slice(0, 10);
+}
+
+function filterRange(arr, range) {
+  const cut = cutoffDate(range);
+  return cut ? arr.filter(e => e.d >= cut) : arr;
+}
+
+function calcTrend(daily) {
+  const w = daily.filter(e => e.w != null);
+  if (w.length < 2) return null;
+  const last = w[w.length - 1].w;
+  const n = Math.min(7, w.length - 1);
+  const prev = w.slice(-(n + 1), -1).reduce((s, e) => s + e.w, 0) / n;
+  return last - prev;
+}
+
+function esc(s) { return s.replace(/'/g, "\\'").replace(/"/g, '&quot;'); }
+function fmtNum(n) { return n != null ? n.toLocaleString('de-DE') : '-'; }
+
+function sortedClientNames() {
+  return Object.keys(data).sort((a, b) => {
+    const sa = data[a].status === 'Aktiv' ? 0 : 1;
+    const sb = data[b].status === 'Aktiv' ? 0 : 1;
+    if (sa !== sb) return sa - sb;
+    return a.localeCompare(b);
+  });
+}
+
+// ── Tab bar ──
+function renderTabs() {
+  const names = sortedClientNames();
+  let h = `<button class="tab ${currentTab === '__overview__' ? 'active' : ''}" onclick="switchTab('__overview__')">Ubersicht</button>`;
+  for (const n of names) {
+    const c = data[n];
+    const dot = c.status === 'Aktiv' ? 'dot-green' : 'dot-gray';
+    h += `<button class="tab ${currentTab === n ? 'active' : ''}" onclick="switchTab('${esc(n)}')"><span class="status-dot ${dot}"></span>${n.split(' ')[0]}</button>`;
+  }
+  document.getElementById('tabBar').innerHTML = h;
+}
+
+function switchTab(name) {
+  currentTab = name;
+  currentRange = 'all';
+  destroyCharts();
+  renderTabs();
+  render();
+}
+
+function setRange(r) {
+  currentRange = r;
+  destroyCharts();
+  render();
+}
+
+function rangeBar() {
+  const rs = [['4w','4 Wochen'],['3m','3 Monate'],['1y','1 Jahr'],['all','Gesamt']];
+  return '<div class="time-range">' + rs.map(([k,l]) =>
+    `<button class="${currentRange === k ? 'active' : ''}" onclick="setRange('${k}')">${l}</button>`
+  ).join('') + '</div>';
+}
+
+// ── Render dispatcher ──
+function render() {
+  const el = document.getElementById('content');
+  if (currentTab === '__overview__') renderOverview(el);
+  else renderClient(el, currentTab);
+}
+
+// ── Overview ──
+function renderOverview(el) {
+  const names = sortedClientNames();
+  const aktiv = names.filter(n => data[n].status === 'Aktiv').length;
+  const runners = names.filter(n => data[n].isRunner).length;
+
+  let rows = '';
+  for (const n of names) {
+    const c = data[n];
+    const d = c.daily || [];
+    const w = d.filter(e => e.w != null);
+    const lastW = w.length ? w[w.length - 1].w : null;
+    const lastDate = d.length ? d[d.length - 1].d : null;
+    const daysAgo = lastDate ? daysBetween(lastDate, TODAY) : 999;
+    const inactive = daysAgo > 7;
+    const trend = calcTrend(d);
+    let trendStr = '-', trendCls = '';
+    if (trend !== null) {
+      trendStr = (trend > 0 ? '+' : '') + trend.toFixed(1) + ' kg';
+      trendCls = trend > 0 ? 'trend-up' : trend < 0 ? 'trend-down' : '';
+    }
+    const dot = c.status === 'Aktiv' ? 'dot-green' : 'dot-gray';
+    rows += `<tr class="clickable ${inactive ? 'inactive-row' : ''}" onclick="switchTab('${esc(n)}')">
+      <td><span class="status-dot ${dot}"></span>${n}${c.isRunner ? ' <span style="color:#888;font-size:10px">Runner</span>' : ''}</td>
+      <td>${lastW != null ? lastW + ' kg' : '-'}</td>
+      <td class="${trendCls}">${trendStr}</td>
+      <td>${lastDate || '-'}${inactive ? ' <span style="color:#E24B4A;font-size:10px">(' + daysAgo + 'd)</span>' : ''}</td>
+      <td>${d.length}</td>
+    </tr>`;
+  }
+
+  el.innerHTML = `
+    <div class="cards">
+      <div class="card"><div class="card-label">Aktive Clients</div><div class="card-value">${aktiv}</div><div class="card-sub">von ${names.length} gesamt</div></div>
+      <div class="card"><div class="card-label">Runner</div><div class="card-value">${runners}</div></div>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Client</th><th>Gewicht</th><th>Trend</th><th>Letzter Eintrag</th><th>Eintr.</th></tr></thead>
+      <tbody>${rows}</tbody></table>
+    </div>`;
+}
+
+// ── Client view ──
+function renderClient(el, name) {
+  const c = data[name];
+  if (!c) { el.innerHTML = '<p>Client nicht gefunden</p>'; return; }
+
+  const daily = c.daily || [];
+  const filt = filterRange(daily, currentRange);
+  const wAll = daily.filter(e => e.w != null);
+  const curW = wAll.length ? wAll[wAll.length - 1].w : null;
+  const startW = wAll.length ? wAll[0].w : null;
+  const trend = calcTrend(daily);
+  const dot = c.status === 'Aktiv' ? 'dot-green' : 'dot-gray';
+
+  // Summary cards
+  let cards = `
+    <div class="card"><div class="card-label">Status</div><div class="card-value" style="font-size:14px"><span class="status-dot ${dot}"></span>${c.status}</div></div>
+    <div class="card"><div class="card-label">Aktuell</div><div class="card-value">${curW != null ? curW : '-'}<span style="font-size:11px;color:#888"> kg</span></div></div>
+    <div class="card"><div class="card-label">Start</div><div class="card-value">${startW != null ? startW : '-'}<span style="font-size:11px;color:#888"> kg</span></div></div>`;
+  if (curW != null && startW != null) {
+    const diff = curW - startW;
+    const cls = diff > 0 ? 'trend-up' : diff < 0 ? 'trend-down' : '';
+    cards += `<div class="card"><div class="card-label">Gesamt</div><div class="card-value ${cls}">${diff > 0 ? '+' : ''}${diff.toFixed(1)}<span style="font-size:11px"> kg</span></div></div>`;
+  }
+  if (trend !== null) {
+    const cls = trend > 0 ? 'trend-up' : trend < 0 ? 'trend-down' : '';
+    cards += `<div class="card"><div class="card-label">7d Trend</div><div class="card-value ${cls}">${trend > 0 ? '+' : ''}${trend.toFixed(1)}<span style="font-size:11px"> kg</span></div></div>`;
+  }
+  cards += `<div class="card"><div class="card-label">Eintr&auml;ge</div><div class="card-value">${daily.length}</div></div>`;
+
+  // Determine columns
+  const hasCal = daily.some(e => e.cal != null);
+  const hasProt = daily.some(e => e.prot != null);
+  const hasSteps = daily.some(e => e.steps != null);
+  const hasRHR = daily.some(e => e.rhr != null);
+  const hasHRMax = daily.some(e => e.hrmax != null);
+
+  let thDaily = '<th>Datum</th><th>Gewicht</th>';
+  if (hasCal) thDaily += '<th>kcal</th>';
+  if (hasProt) thDaily += '<th>Protein</th>';
+  if (hasSteps) thDaily += '<th>Schritte</th>';
+  if (hasRHR) thDaily += '<th>Ruhe-HF</th>';
+  if (hasHRMax) thDaily += '<th>HR Max</th>';
+  thDaily += '<th></th>';
+
+  const filtRev = [...filt].reverse();
+  let dailyRows = '';
+  for (const e of filtRev) {
+    const origIdx = daily.indexOf(e);
+    let r = `<td>${e.d}</td><td>${e.w != null ? e.w + ' kg' : '-'}</td>`;
+    if (hasCal) r += `<td>${e.cal != null ? fmtNum(e.cal) : '-'}</td>`;
+    if (hasProt) r += `<td>${e.prot != null ? e.prot + 'g' : '-'}</td>`;
+    if (hasSteps) r += `<td>${e.steps != null ? fmtNum(e.steps) : '-'}</td>`;
+    if (hasRHR) r += `<td>${e.rhr != null ? e.rhr + ' bpm' : '-'}</td>`;
+    if (hasHRMax) r += `<td>${e.hrmax != null ? e.hrmax + ' bpm' : '-'}</td>`;
+    r += `<td><button class="xbtn" onclick="delDaily('${esc(name)}',${origIdx})">&times;</button></td>`;
+    dailyRows += `<tr>${r}</tr>`;
+  }
+  if (!filtRev.length) {
+    const cols = 3 + (hasCal?1:0) + (hasProt?1:0) + (hasSteps?1:0) + (hasRHR?1:0) + (hasHRMax?1:0);
+    dailyRows = `<tr><td colspan="${cols}" style="text-align:center;color:#aaa;padding:16px">Keine Daten im Zeitraum</td></tr>`;
+  }
+
+  // Daily form
+  let dailyFormFields = `
+    <div class="form-group"><label>Datum</label><input type="date" id="fDate" value="${new Date().toISOString().slice(0,10)}" class="w150"></div>
+    <div class="form-group"><label>Gewicht (kg)</label><input type="number" step="0.1" id="fWeight" class="w100" inputmode="decimal"></div>`;
+  if (!c.isRunner) {
+    dailyFormFields += `
+    <div class="form-group"><label>kcal</label><input type="number" id="fCal" class="w80" inputmode="numeric"></div>
+    <div class="form-group"><label>Protein (g)</label><input type="number" id="fProt" class="w80" inputmode="numeric"></div>
+    <div class="form-group"><label>Schritte</label><input type="number" id="fSteps" class="w100" inputmode="numeric"></div>`;
+  } else {
+    dailyFormFields += `
+    <div class="form-group"><label>Ruhe-HF</label><input type="number" id="fRHR" class="w80" inputmode="numeric" placeholder="z.B. 48"></div>
+    <div class="form-group"><label>HR Max</label><input type="number" id="fHRMax" class="w80" inputmode="numeric" placeholder="z.B. 185"></div>`;
+  }
+
+  // Runner sections
+  let runnerHTML = '';
+  if (c.isRunner) {
+    // KM chart
+    const wkm = filterRange(c.weekly_km || [], currentRange);
+    const wkmRev = [...wkm].reverse();
+    let wkmRows = '';
+    for (const e of wkmRev) {
+      const idx = (c.weekly_km || []).indexOf(e);
+      wkmRows += `<tr><td>${e.d}</td><td>${e.km} km</td><td>${e.runs}</td><td><button class="xbtn" onclick="delWkm('${esc(name)}',${idx})">&times;</button></td></tr>`;
+    }
+
+    // Races
+    const races = c.races || [];
+    let raceRows = '';
+    for (const r of [...races].reverse()) {
+      const idx = races.indexOf(r);
+      raceRows += `<tr><td>${r.d}</td><td>${r.name}</td><td>${r.dist || '-'}</td><td>${r.time || '-'}</td><td>${r.note || '-'}</td><td><button class="xbtn" onclick="delRace('${esc(name)}',${idx})">&times;</button></td></tr>`;
+    }
+
+    // Sessions
+    const sess = filterRange(c.sessions || [], currentRange);
+    let sessRows = '';
+    for (const s of [...sess].reverse()) {
+      const idx = (c.sessions || []).indexOf(s);
+      sessRows += `<tr><td>${s.d}</td><td>${s.type}</td><td>${s.dist} km</td><td>${s.note || '-'}</td><td><button class="xbtn" onclick="delSess('${esc(name)}',${idx})">&times;</button></td></tr>`;
+    }
+
+    runnerHTML = `
+      <div class="section">
+        <h3>Wochen-Kilometer</h3>
+        <div class="chart-container"><canvas id="chartKm"></canvas></div>
+        <div class="table-wrap">
+          <table><thead><tr><th>Woche</th><th>km</th><th>Laufe</th><th></th></tr></thead>
+          <tbody>${wkmRows || '<tr><td colspan="4" style="text-align:center;color:#aaa;padding:16px">Keine Daten</td></tr>'}</tbody></table>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Wettkampfe</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Datum</th><th>Name</th><th>Distanz</th><th>Zeit</th><th>Notiz</th><th></th></tr></thead>
+          <tbody>${raceRows || '<tr><td colspan="6" style="text-align:center;color:#aaa;padding:16px">Keine Daten</td></tr>'}</tbody></table>
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Sessions</h3>
+        <div class="table-wrap">
+          <table><thead><tr><th>Datum</th><th>Typ</th><th>Distanz</th><th>Notiz</th><th></th></tr></thead>
+          <tbody>${sessRows || '<tr><td colspan="5" style="text-align:center;color:#aaa;padding:16px">Keine Daten</td></tr>'}</tbody></table>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Wochen-km hinzufugen</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Woche (Mo)</label><input type="date" id="fWkmD" class="w150"></div>
+          <div class="form-group"><label>km</label><input type="number" step="0.1" id="fWkmKm" class="w80"></div>
+          <div class="form-group"><label>Laufe</label><input type="number" id="fWkmR" class="w80"></div>
+          <button class="primary" onclick="addWkm('${esc(name)}')">+</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Session hinzufugen</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Datum</label><input type="date" id="fSessD" class="w150"></div>
+          <div class="form-group"><label>Typ</label>
+            <select id="fSessT" class="w120">
+              <option>Easy Run</option><option>Long Run</option><option>Tempo</option>
+              <option>Intervall</option><option>Trail</option><option>Quality</option><option>Wettkampf</option>
+            </select>
+          </div>
+          <div class="form-group"><label>km</label><input type="number" step="0.1" id="fSessDist" class="w80"></div>
+          <div class="form-group"><label>Notiz</label><input type="text" id="fSessNote" class="w150"></div>
+          <button class="primary" onclick="addSess('${esc(name)}')">+</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <h3>Wettkampf hinzufugen</h3>
+        <div class="form-row">
+          <div class="form-group"><label>Datum</label><input type="date" id="fRaceD" class="w150"></div>
+          <div class="form-group"><label>Name</label><input type="text" id="fRaceN" class="w150"></div>
+          <div class="form-group"><label>Distanz</label><input type="text" id="fRaceDist" class="w100"></div>
+          <div class="form-group"><label>Zeit</label><input type="text" id="fRaceTime" class="w100" placeholder="h:mm:ss"></div>
+          <div class="form-group"><label>Notiz</label><input type="text" id="fRaceNote" class="w150"></div>
+          <button class="primary" onclick="addRace('${esc(name)}')">+</button>
+        </div>
+      </div>`;
+  }
+
+  el.innerHTML = `
+    <div class="cards">${cards}</div>
+    ${rangeBar()}
+    <div class="section">
+      <h3>Gewicht</h3>
+      <div class="chart-container"><canvas id="chartWeight"></canvas></div>
+    </div>
+    <div class="section">
+      <h3>Tagliche Daten</h3>
+      <div class="table-wrap">
+        <table><thead><tr>${thDaily}</tr></thead><tbody>${dailyRows}</tbody></table>
+      </div>
+    </div>
+    <div class="form-section">
+      <h3>Eintrag hinzufugen</h3>
+      <div class="form-row">
+        ${dailyFormFields}
+        <button class="primary" onclick="addDaily('${esc(name)}')">+</button>
+      </div>
+    </div>
+    ${runnerHTML}`;
+
+  // Draw charts
+  requestAnimationFrame(() => {
+    drawWeightChart(filt);
+    if (c.isRunner) drawKmChart(filterRange(c.weekly_km || [], currentRange));
+  });
+}
+
+function drawWeightChart(entries) {
+  const canvas = document.getElementById('chartWeight');
+  if (!canvas) return;
+  const w = entries.filter(e => e.w != null);
+  if (!w.length) return;
+  const ch = new Chart(canvas.getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: w.map(e => e.d),
+      datasets: [{
+        data: w.map(e => e.w),
+        borderColor: '#111', backgroundColor: 'rgba(0,0,0,0.04)',
+        fill: true, tension: 0.3, pointRadius: w.length > 40 ? 1 : 3,
+        pointHoverRadius: 5, borderWidth: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10, font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { font: { size: 10 } }, grid: { color: '#f0f0f0' } }
+      }
+    }
+  });
+  chartInstances.push(ch);
+}
+
+function drawKmChart(entries) {
+  const canvas = document.getElementById('chartKm');
+  if (!canvas || !entries.length) return;
+  const ch = new Chart(canvas.getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: entries.map(e => e.d),
+      datasets: [{
+        data: entries.map(e => e.km),
+        backgroundColor: '#111', borderRadius: 3, maxBarThickness: 28
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { maxTicksLimit: 10, font: { size: 10 } }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: '#f0f0f0' } }
+      }
+    }
+  });
+  chartInstances.push(ch);
+}
+
+// ── Data mutations ──
+function addDaily(name) {
+  const d = document.getElementById('fDate').value;
+  if (!d) { alert('Datum fehlt'); return; }
+  const wVal = document.getElementById('fWeight').value;
+  const entry = { d, w: wVal ? parseFloat(wVal) : null };
+  const calEl = document.getElementById('fCal');
+  const protEl = document.getElementById('fProt');
+  const stepsEl = document.getElementById('fSteps');
+  const rhrEl = document.getElementById('fRHR');
+  const hrmaxEl = document.getElementById('fHRMax');
+  if (calEl && calEl.value) entry.cal = parseInt(calEl.value);
+  if (protEl && protEl.value) entry.prot = parseInt(protEl.value);
+  if (stepsEl && stepsEl.value) entry.steps = parseInt(stepsEl.value);
+  if (rhrEl && rhrEl.value) entry.rhr = parseInt(rhrEl.value);
+  if (hrmaxEl && hrmaxEl.value) entry.hrmax = parseInt(hrmaxEl.value);
+  if (!data[name].daily) data[name].daily = [];
+  data[name].daily = data[name].daily.filter(e => e.d !== d);
+  data[name].daily.push(entry);
+  sortByD(data[name].daily);
+  saveData(); destroyCharts(); render();
+}
+
+function delDaily(name, idx) {
+  data[name].daily.splice(idx, 1);
+  saveData(); destroyCharts(); render();
+}
+
+function addWkm(name) {
+  const d = document.getElementById('fWkmD').value;
+  const km = document.getElementById('fWkmKm').value;
+  if (!d || !km) { alert('Datum und km sind Pflicht'); return; }
+  if (!data[name].weekly_km) data[name].weekly_km = [];
+  data[name].weekly_km = data[name].weekly_km.filter(e => e.d !== d);
+  const r = document.getElementById('fWkmR').value;
+  data[name].weekly_km.push({ d, km: parseFloat(km), runs: r ? parseInt(r) : 0 });
+  sortByD(data[name].weekly_km);
+  saveData(); destroyCharts(); render();
+}
+
+function delWkm(name, idx) {
+  (data[name].weekly_km || []).splice(idx, 1);
+  saveData(); destroyCharts(); render();
+}
+
+function addSess(name) {
+  const d = document.getElementById('fSessD').value;
+  const dist = document.getElementById('fSessDist').value;
+  if (!d || !dist) { alert('Datum und Distanz sind Pflicht'); return; }
+  if (!data[name].sessions) data[name].sessions = [];
+  const entry = { d, type: document.getElementById('fSessT').value, dist: parseFloat(dist) };
+  const note = document.getElementById('fSessNote').value;
+  if (note) entry.note = note;
+  data[name].sessions.push(entry);
+  sortByD(data[name].sessions);
+  saveData(); destroyCharts(); render();
+}
+
+function delSess(name, idx) {
+  (data[name].sessions || []).splice(idx, 1);
+  saveData(); destroyCharts(); render();
+}
+
+function addRace(name) {
+  const d = document.getElementById('fRaceD').value;
+  const n = document.getElementById('fRaceN').value;
+  if (!d || !n) { alert('Datum und Name sind Pflicht'); return; }
+  if (!data[name].races) data[name].races = [];
+  const entry = { d, name: n };
+  const dist = document.getElementById('fRaceDist').value;
+  const time = document.getElementById('fRaceTime').value;
+  const note = document.getElementById('fRaceNote').value;
+  if (dist) entry.dist = dist;
+  if (time) entry.time = time;
+  if (note) entry.note = note;
+  data[name].races.push(entry);
+  sortByD(data[name].races);
+  saveData(); destroyCharts(); render();
+}
+
+function delRace(name, idx) {
+  (data[name].races || []).splice(idx, 1);
+  saveData(); destroyCharts(); render();
+}
+
+// ── Export / Import / Reset ──
+function exportData() {
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'voltr-coaching-' + TODAY + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function importData(evt) {
+  const file = evt.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const obj = JSON.parse(e.target.result);
+      if (typeof obj !== 'object' || Array.isArray(obj)) throw new Error();
+      data = obj;
+      saveData(); currentTab = '__overview__';
+      destroyCharts(); renderTabs(); render();
+      alert('Import erfolgreich!');
+    } catch(err) { alert('Fehler: Ungultige JSON-Datei'); }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+function resetData() {
+  if (!confirm('Alle Daten auf Baseline zurucksetzen? Alle Anderungen gehen verloren.')) return;
+  data = JSON.parse(JSON.stringify(BASELINE));
+  saveData(); currentTab = '__overview__';
+  destroyCharts(); renderTabs(); render();
+}
+
+// ── Init ──
+loadData();
+renderTabs();
+render();
+</script>
+</body>
+</html>
