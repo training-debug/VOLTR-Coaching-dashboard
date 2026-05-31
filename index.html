@@ -121,6 +121,20 @@ tr:hover td { background: #fafafa; }
   button.primary { width: 100%; padding: 12px; font-size: 14px; margin-top: 4px; }
   .form-group label { font-size: 12px; }
 }
+
+/* === v2: Praesentationsmodus + Mobile === */
+.form-section, .xbtn, button.danger { display: none !important; }
+body.edit-mode .form-section { display: block !important; }
+body.edit-mode .xbtn { display: inline-block !important; }
+body.edit-mode button.danger { display: inline-block !important; }
+.chart-container { height: 300px; }
+.table-wrap { overflow-x: auto; }
+.editToggle { font-size: 11px; }
+@media (max-width: 600px) {
+  .chart-container { height: 270px; }
+  h3 { font-size: 12px; }
+  .card-value { font-size: 19px; }
+}
 </style>
 </head>
 <body>
@@ -158,6 +172,7 @@ tr:hover td { background: #fafafa; }
   <h1>VOLTR<span style="font-weight:200;color:#888;margin-left:6px">coaching</span></h1>
   <div id="lastSync" style="font-size:11px;color:#888;width:100%;margin-top:-6px;letter-spacing:0.3px;"></div>
   <div class="header-actions">
+    <button class="editToggle" onclick="document.body.classList.toggle('edit-mode')">Bearbeiten</button>
     <button onclick="exportData()">Export JSON</button>
     <button onclick="document.getElementById('importFile').click()">Import JSON</button>
     <input type="file" id="importFile" class="hidden-input" accept=".json" onchange="importData(event)">
@@ -178,7 +193,7 @@ let currentTab = '__overview__';
 let currentRange = 'all';
 let chartInstances = [];
 
-const DATA_VERSION = '2026-05-31-01'; // Vom Agent bei jedem Sync hochgezaehlt. Aenderung => Datei-Daten gewinnen.
+const DATA_VERSION = '2026-05-31-02'; // Vom Agent bei jedem Sync hochgezaehlt. Aenderung => Datei-Daten gewinnen.
 function loadData() {
   const raw = localStorage.getItem(LS_KEY);
   const storedV = localStorage.getItem(LS_KEY + '_v');
@@ -486,13 +501,23 @@ function renderClient(el, name) {
       </div>`;
   }
 
+  let gymHTML = '';
+  if (!c.isRunner && (c.adherence || []).length) {
+    let aRows = '';
+    for (const a of [...c.adherence].reverse()) {
+      aRows += `<tr><td>${a.d}</td><td>${a.done != null ? a.done : '-'}${a.total ? '/' + a.total : ''}</td><td>${a.note || '-'}</td></tr>`;
+    }
+    gymHTML = `<div class="section"><h3>Einheiten / Adherence</h3><div class="table-wrap"><table><thead><tr><th>Woche</th><th>Workouts</th><th>Notiz</th></tr></thead><tbody>${aRows}</tbody></table></div></div>`;
+  }
   el.innerHTML = `
-    <div class="cards">${cards}</div>
-    ${rangeBar()}
     <div class="section">
-      <h3>Gewicht</h3>
+      <h3>Gewichtsverlauf</h3>
+      ${rangeBar()}
       <div class="chart-container"><canvas id="chartWeight"></canvas></div>
     </div>
+    <div class="cards">${cards}</div>
+    ${gymHTML}
+    ${runnerHTML}
     <div class="section">
       <h3>Tagliche Daten</h3>
       <div class="table-wrap">
@@ -505,8 +530,7 @@ function renderClient(el, name) {
         ${dailyFormFields}
         <button class="primary" onclick="addDaily('${esc(name)}')">+</button>
       </div>
-    </div>
-    ${runnerHTML}`;
+    </div>`;
 
   // Draw charts
   requestAnimationFrame(() => {
